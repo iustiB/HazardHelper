@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "414991689873",
+    "firebase_url": "https://hazardhelper-444b6.firebaseio.com",
+    "project_id": "hazardhelper-444b6",
+    "storage_bucket": "hazardhelper-444b6.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:414991689873:android:8905ca249a3b8da1",
+        "android_client_info": {
+          "package_name": "licenta.iusti.hazardhelper"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "414991689873-uaqpqr52jkarpdf01g0ugctpggvjirja.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "licenta.iusti.hazardhelper",
+            "certificate_hash": "fd71135102720ad6c0822d3f21404b776a27c303"
+          }
+        },
+        {
+          "client_id": "414991689873-sd9vb44dkr8l755h0lqto6pnjpvmsqrb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWQLnpqXNW21OVEevn1QEoFCP_vsl95Zc"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "414991689873-sd9vb44dkr8l755h0lqto6pnjpvmsqrb.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

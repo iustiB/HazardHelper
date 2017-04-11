@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">HazardHelper</string>
+    <string name="sign_out">Sign Out</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="signed_out">Signed Out</string>
+    <string name="title_activity_main">Map</string>
+</resources>
