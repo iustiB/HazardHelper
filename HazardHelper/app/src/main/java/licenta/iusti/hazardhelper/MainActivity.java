@@ -699,6 +699,6 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
 
     @Override
     public void onInfoWindowClick(Marker marker) {
-        // dialogul din android
+        // dialogul din android sda asd
     }
 }
