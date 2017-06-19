@@ -42,6 +42,8 @@
             android:label="@string/title_activity_main" />
         <activity android:name=".PhoneAuthActivity" />
         <activity android:name=".AddPlaceDetailsActivity"></activity>
+        <activity android:name=".SafepointDetailsActivity" android:theme="@style/SafepointTheme">
+        </activity>
     </application>
 
 </manifest>

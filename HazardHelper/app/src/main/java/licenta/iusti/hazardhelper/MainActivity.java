@@ -63,6 +63,7 @@ import licenta.iusti.hazardhelper.domain.Hazard;
 import licenta.iusti.hazardhelper.utils.GooglePlacesHelper;
 
 import static com.google.android.gms.location.places.AutocompleteFilter.TYPE_FILTER_ESTABLISHMENT;
+import static licenta.iusti.hazardhelper.SafepointDetailsActivity.SAFEPOINT_UID;
 
 public class MainActivity extends AppCompatActivity  implements OnMapReadyCallback, View.OnClickListener, GoogleApiClient.ConnectionCallbacks, LocationListener, GoogleApiClient.OnConnectionFailedListener, GoogleMap.OnMapLongClickListener, GooglePlacesHelper.PlacesHelperListener, GoogleMap.OnInfoWindowClickListener {
 
@@ -75,7 +76,6 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
     private CircleOptions mHazardRadiusCircle;
 
     private boolean mHasAddHazardStarted = false;
-    private GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
 
     int PLACE_PICKER_REQUEST = 1105;
@@ -91,6 +91,7 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
     private ArrayList<Marker> mMapMarkers = new ArrayList<>();
     private ArrayList<Circle> mMapCircles = new ArrayList<>();
     private SeekBar mRadiusSeekbar;
+    private GoogleApiClient mGoogleApiClient;
 
 
     @Override
@@ -392,10 +393,11 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 result.clear();
-                Iterator<DataSnapshot> iterator = dataSnapshot.getChildren().iterator();
-                while (iterator.hasNext()) {
-                    CustomPlace place = iterator.next().getValue(CustomPlace.class);
-                    result.add(place);
+                for(DataSnapshot item : dataSnapshot.getChildren()){
+                    CustomPlace customPlace = item.getValue(CustomPlace.class);
+                    customPlace.setUid(item.getKey());
+                    result.add(customPlace);
+
                 }
                 onSafepointsFetched(result);
 
@@ -683,12 +685,14 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
 
     @Override
     public void onPlaceFound(Place place,CustomPlace customPlace) {
-        mMapMarkers.add(
-                mMap.addMarker(new MarkerOptions()
-                        .position(place.getLatLng())
-                        .title(customPlace.getCategory())
-                        .snippet("snippet test")
-                ));
+        Marker marker = mMap.addMarker(new MarkerOptions()
+                .position(place.getLatLng())
+                .title(customPlace.getCategory())
+                .snippet("snippet test")
+
+        );
+        marker.setTag(customPlace.getUid());
+        mMapMarkers.add(marker);
 
     }
 
@@ -699,6 +703,9 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
 
     @Override
     public void onInfoWindowClick(Marker marker) {
-        // dialogul din android sda asd
+        Log.e("Marker clicked:",marker.getTag().toString());
+        Intent intent = new Intent(this,SafepointDetailsActivity.class);
+        intent.putExtra(SAFEPOINT_UID,marker.getTag().toString());
+        startActivity(intent);
     }
 }

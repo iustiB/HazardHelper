@@ -23,4 +23,16 @@
         android:id="@+id/btn"
         android:text="Save"
         android:layout_height="wrap_content" />
+    <GridView
+        android:id="@+id/utilities_gridview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:columnWidth="100dp"
+        android:gravity="center"
+        android:minHeight="90dp"
+        android:horizontalSpacing="16dp"
+        android:verticalSpacing="16dp"
+        android:numColumns="auto_fit"
+        android:stretchMode="columnWidth" />
 </LinearLayout>

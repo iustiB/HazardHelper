@@ -62,6 +62,12 @@ public class MessagesListAdapter extends BaseAdapter {
         return convertView;
 
     }
+    public void add(Message message){
+        if(!messages.contains(message)){
+            messages.add(message);
+            notifyDataSetChanged();
+        }
+    }
 
     private class MyViewHolder {
         TextView tv_username;

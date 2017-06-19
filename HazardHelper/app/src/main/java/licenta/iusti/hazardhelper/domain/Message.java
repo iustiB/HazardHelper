@@ -51,4 +51,9 @@ public class Message {
         this.content = content;
         this.date = date;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        return this.id.equals(((Message)obj).getId() );
+    }
 }
