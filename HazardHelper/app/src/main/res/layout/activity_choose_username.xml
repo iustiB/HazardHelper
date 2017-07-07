@@ -1,19 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
 
-    <EditText
+
+    <TextView
+        android:padding="30dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Name"
-        android:inputType="text"
-        android:id="@+id/username_choose_text" />
+        android:gravity="center"
+        android:text="Please choose an username so others can see you:"/>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+
+        <EditText
+            android:id="@+id/username_choose_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+
+            android:hint="Username"
+            android:inputType="text" />
+
+        <ImageView
+            android:id="@+id/username_choose_text_valid"
+            android:layout_alignRight="@id/username_choose_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:src="@drawable/ic_username_bad" />
+    </RelativeLayout>
+
+
+
     <Button
+        android:enabled="true"
+        android:id="@+id/username_choose_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_marginTop="50dp"
+        android:text="OK" />
+
+    <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="OK"
-        android:id="@+id/username_choose_button"/>
+        android:layout_gravity="center"
+        android:layout_marginTop="100dp"
+        android:src="@drawable/users_pic" />
 </LinearLayout>

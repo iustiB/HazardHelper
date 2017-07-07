@@ -5,10 +5,10 @@
     android:paddingLeft="20dp"
     android:paddingRight="20dp"
     android:paddingTop="16dp"
-    android:background="#f7f5f5"
     >
 
         <RelativeLayout
+            android:alpha="0.8"
             android:layout_width="match_parent"
             android:background="@drawable/chat_item_background"
 
@@ -40,7 +40,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/text_view_username"
-            android:text="continutcontinntinutcontinutcsdasdaontinutasdsadsa continutcontinut"
+            android:hint="Start typing..."
             android:textColor="#000"
             android:paddingRight="12dp"
             android:paddingLeft="12dp"

@@ -4,12 +4,19 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
+    <ImageView
 
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:src="@drawable/chat_background"
+        android:scaleType="centerCrop"
+        android:alpha="0.1"/>
     <ListView
         android:id="@+id/messages_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@+id/input_layout"
+        android:paddingBottom="10dp"
         android:dividerHeight="0dp"
         android:stackFromBottom="true"
         android:transcriptMode="normal" />
@@ -28,9 +35,10 @@
             android:padding="20dp"
             android:layout_toLeftOf="@+id/send_message_button"
             android:layout_centerVertical="true"
-            android:text="MessadsadasdsadsassadsadasdasdasdsasssssdsadsadsadaasdasdsageINput" />
+            android:hint="Say something . . ." />
 
         <ImageView
+            android:contentDescription="send message"
             android:layout_marginRight="8dp"
             android:id="@+id/send_message_button"
             android:layout_width="wrap_content"

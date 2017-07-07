@@ -45,7 +45,4 @@ public class Hazard {
         this.longitude = longitude;
     }
 
-
-    //TODO : nume , centru lat lng, radius , categ (+other),
-    //TODO : FAB pentru adaugare
 }

@@ -10,12 +10,15 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <application
+        android:screenOrientation="portrait"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar"
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/ic_launch"
         android:label="@string/app_name"
         android:supportsRtl="true">
-        <activity android:name=".SignInActivity">
+        <activity android:name=".signInClasses.SignInActivity"
+            android:screenOrientation="portrait">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -36,13 +39,14 @@
 
         <activity
             android:name=".MainActivity"
+            android:screenOrientation="portrait"
             android:label="@string/title_activity_main" />
         <activity
-            android:name=".GoogleSignInActivity"
+            android:name=".signInClasses.GoogleSignInActivity"
             android:label="@string/title_activity_main" />
-        <activity android:name=".PhoneAuthActivity" />
-        <activity android:name=".AddPlaceDetailsActivity"></activity>
-        <activity android:name=".SafepointDetailsActivity" android:theme="@style/SafepointTheme">
+        <activity android:name=".signInClasses.PhoneAuthActivity" />
+        <activity android:name=".features.AddPlaceDetailsActivity"></activity>
+        <activity android:name=".features.SafepointDetailsActivity" android:theme="@style/SafepointTheme">
         </activity>
     </application>
 

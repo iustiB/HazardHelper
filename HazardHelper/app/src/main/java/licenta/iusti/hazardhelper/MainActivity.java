@@ -8,9 +8,9 @@ import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.location.Location;
 import android.os.Build;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -21,15 +21,18 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
@@ -47,33 +50,41 @@ import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
-import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.maps.android.clustering.ClusterManager;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import licenta.iusti.hazardhelper.domain.CustomPlace;
+import licenta.iusti.hazardhelper.features.AddPlaceDetailsActivity;
+import licenta.iusti.hazardhelper.domain.Safepoint;
 import licenta.iusti.hazardhelper.domain.Hazard;
+import licenta.iusti.hazardhelper.features.SafepointDetailsActivity;
+import licenta.iusti.hazardhelper.signInClasses.ChooseUsernameFragment;
+import licenta.iusti.hazardhelper.signInClasses.SignInActivity;
+import licenta.iusti.hazardhelper.utils.CustomClusterRenderer;
 import licenta.iusti.hazardhelper.utils.GooglePlacesHelper;
+import licenta.iusti.hazardhelper.utils.MyClusterItem;
 
 import static com.google.android.gms.location.places.AutocompleteFilter.TYPE_FILTER_ESTABLISHMENT;
-import static licenta.iusti.hazardhelper.SafepointDetailsActivity.SAFEPOINT_UID;
+import static licenta.iusti.hazardhelper.features.SafepointDetailsActivity.SAFEPOINT_UID;
 
-public class MainActivity extends AppCompatActivity  implements OnMapReadyCallback, View.OnClickListener, GoogleApiClient.ConnectionCallbacks, LocationListener, GoogleApiClient.OnConnectionFailedListener, GoogleMap.OnMapLongClickListener, GooglePlacesHelper.PlacesHelperListener, GoogleMap.OnInfoWindowClickListener {
+public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, View.OnClickListener, GoogleApiClient.ConnectionCallbacks, LocationListener, GoogleApiClient.OnConnectionFailedListener, GoogleMap.OnMapLongClickListener, GooglePlacesHelper.PlacesHelperListener, ClusterManager.OnClusterItemInfoWindowClickListener<MyClusterItem> {
 
     public static final String HAZARDS_DB_KEY = "hazards";
     public static final String SAFEPOINTS_DB_KEY = "safepoints";
     private GoogleMap mMap;
-    private TextView mRadiusTextView;
+    private ClusterManager<MyClusterItem> mClusterManager;
     private int mRadiusValue;
     private Circle mHazardRadius;
     private CircleOptions mHazardRadiusCircle;
+
 
     private boolean mHasAddHazardStarted = false;
     private LocationRequest mLocationRequest;
@@ -84,14 +95,15 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
     PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
 
 
-    FloatingActionButton fab2, fabAddHazard, fabAddSafepoint, fabMain;
-    LinearLayout fabLayout1, fabLayout2, fabLayout3;
+    FloatingActionButton fabAddHazard, fabAddSafepoint, fabMain;
+    LinearLayout fabLayout1, fabLayout3;
     View fabBGLayout;
     boolean isFABOpen = false;
-    private ArrayList<Marker> mMapMarkers = new ArrayList<>();
+    private ArrayList<MyClusterItem> mMapMarkers = new ArrayList<>();
     private ArrayList<Circle> mMapCircles = new ArrayList<>();
     private SeekBar mRadiusSeekbar;
     private GoogleApiClient mGoogleApiClient;
+    private GooglePlacesHelper placesHelper;
 
 
     @Override
@@ -103,6 +115,7 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
         setContentView(R.layout.activity_main);
 
         Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
+        myToolbar.setTitle("Hazard Helper");
         setSupportActionBar(myToolbar);
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
@@ -111,22 +124,18 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
         mapFragment.getMapAsync(this);
 
 
-        //radius size click listeners
-        findViewById(R.id.radius_minus_btn).setOnClickListener(this);
-        findViewById(R.id.radius_plus_btn).setOnClickListener(this);
-//        findViewById(R.id.fab_add).setOnClickListener(this);
-        findViewById(R.id.save_hazard_btn).setOnClickListener(this);
-        mRadiusTextView = (TextView) findViewById(R.id.radius_text_view);
-        mRadiusTextView.setText(mRadiusValue + "");
+        Button saveBtn = (Button) findViewById(R.id.save_hazard_btn);
+        saveBtn.setOnClickListener(this);
+
+
+        findViewById(R.id.cancel_hazard_btn).setOnClickListener(this);
 
         mRadiusSeekbar = (SeekBar) findViewById(R.id.seek_bar);
         mRadiusSeekbar.setEnabled(false);
         mRadiusSeekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                mRadiusTextView.setText(mRadiusValue + "");
                 convertSeekbarProgresToRadius();
-
                 mHazardRadius.setRadius(mRadiusValue);
 
             }
@@ -144,15 +153,12 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
         // FAB configurations
 
         fabLayout1 = (LinearLayout) findViewById(R.id.fabLayout1);
-        fabLayout2 = (LinearLayout) findViewById(R.id.fabLayout2);
         fabLayout3 = (LinearLayout) findViewById(R.id.fabLayout3);
-        fab2 = (FloatingActionButton) findViewById(R.id.fab2); // DE NADA
         fabMain = (FloatingActionButton) findViewById(R.id.fab);
         fabAddHazard = (FloatingActionButton) findViewById(R.id.fab_add_hazard);
         fabAddSafepoint = (FloatingActionButton) findViewById(R.id.fab_add_safepoint);
         fabAddSafepoint.setOnClickListener(this);
         fabAddHazard.setOnClickListener(this);
-        fab2.setOnClickListener(this);
         fabBGLayout = findViewById(R.id.fabBGLayout);
 
         fabMain.setOnClickListener(new View.OnClickListener() {
@@ -178,14 +184,12 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
     private void showFABMenu() {
         isFABOpen = true;
         fabLayout1.setVisibility(View.VISIBLE);
-        fabLayout2.setVisibility(View.VISIBLE);
         fabLayout3.setVisibility(View.VISIBLE);
         fabBGLayout.setVisibility(View.VISIBLE);
 
         fabMain.animate().rotationBy(180);
         fabLayout1.animate().translationY(-getResources().getDimension(R.dimen.standard_55));
-        fabLayout2.animate().translationY(-getResources().getDimension(R.dimen.standard_100));
-        fabLayout3.animate().translationY(-getResources().getDimension(R.dimen.standard_145));
+        fabLayout3.animate().translationY(-getResources().getDimension(R.dimen.standard_100));
     }
 
     private void closeFABMenu() {
@@ -193,7 +197,6 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
         fabBGLayout.setVisibility(View.GONE);
         fabMain.animate().rotationBy(-180);
         fabLayout1.animate().translationY(0);
-        fabLayout2.animate().translationY(0);
         fabLayout3.animate().translationY(0).setListener(new Animator.AnimatorListener() {
             @Override
             public void onAnimationStart(Animator animator) {
@@ -204,7 +207,6 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
             public void onAnimationEnd(Animator animator) {
                 if (!isFABOpen) {
                     fabLayout1.setVisibility(View.GONE);
-                    fabLayout2.setVisibility(View.GONE);
                     fabLayout3.setVisibility(View.GONE);
                 }
 
@@ -224,8 +226,7 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
 
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu)
-    {
+    public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main_menu, menu);
         return true;
@@ -241,7 +242,7 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
                             .build();
                     Intent intent =
                             new PlaceAutocomplete.IntentBuilder(PlaceAutocomplete.MODE_OVERLAY)
-                                    .setBoundsBias(new LatLngBounds(mMap.getCameraPosition().target,mMap.getCameraPosition().target))
+                                    .setBoundsBias(new LatLngBounds(mMap.getCameraPosition().target, mMap.getCameraPosition().target))
 //                                    .setFilter(typeFilter)
                                     .build(this);
                     startActivityForResult(intent, PLACE_AUTOCOMPLETE_REQUEST_CODE);
@@ -251,8 +252,52 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
                     // TODO: Handle the error.
                 }
                 return true;
+            case R.id.log_out_btn:
+                new AlertDialog.Builder(this)
+                        .setTitle("Are you sure you want to log out?")
+                        .setMessage("All your local data will be deleted and the application will close")
+                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                //Prompt the user once explanation has been shown
+                                FirebaseAuth.getInstance().signOut();
+
+                                if (FirebaseAuth.getInstance().getCurrentUser() != null && FirebaseAuth.getInstance().getCurrentUser().getProviders().contains("google.com")) {
+
+                                    Auth.GoogleSignInApi.revokeAccess(mGoogleApiClient).setResultCallback(
+                                            new ResultCallback<Status>() {
+                                                @Override
+                                                public void onResult(@NonNull Status status) {
+//                                    startActivity(new Intent(MainActivity.this, SignInActivity.class));
+                                                    finish();
+                                                }
+                                            });
+                                } else {
+//                    startActivity(new Intent(this, SignInActivity.class));
+                                    finish();
+                                }
 
 
+                                String packageName = getApplicationContext().getPackageName();
+                                Runtime runtime = Runtime.getRuntime();
+                                try {
+                                    runtime.exec("pm clear "+packageName);
+
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+
+                            }
+                        })
+
+                        .setNegativeButton("Cancel",null)
+                        .setCancelable(true)
+                        .create()
+                        .show();
+
+
+
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -270,17 +315,17 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        setUpClusterer();
+
         mMap.setOnMapLongClickListener(this);
 //        mMap.setOnMarkerClickListener(this);
-        mMap.setOnInfoWindowClickListener(this);
+
         mMap.setOnCircleClickListener(new GoogleMap.OnCircleClickListener() {
             @Override
             public void onCircleClick(Circle circle) {
 
             }
         });
-        populateHazardsMap();
-
 
         // Atttributes for hazard radius
 //        mHazardRadius.setClickable(true);
@@ -306,7 +351,33 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
         }
 
 
+
+
+
+
     }
+
+    private void setUpClusterer() {
+        // Position the map.
+
+
+        // Initialize the manager with the context and the map.
+        // (Activity extends context, so we can pass 'this' in the constructor.)
+        mClusterManager = new ClusterManager<MyClusterItem>(this, mMap);
+
+        // Point the map's listeners at the listeners implemented by the cluster
+        // manager.
+        mMap.setOnCameraIdleListener(mClusterManager);
+        mMap.setOnMarkerClickListener(mClusterManager);
+
+        CustomClusterRenderer renderer = new CustomClusterRenderer(this, mMap, mClusterManager);
+        mClusterManager.setRenderer(renderer);
+
+        mMap.setOnInfoWindowClickListener(mClusterManager);
+        mClusterManager.setOnClusterItemInfoWindowClickListener(this);
+        // Add cluster items (markers) to the cluster manager.
+    }
+
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == PLACE_PICKER_REQUEST) {
@@ -349,7 +420,6 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
         mDatabase.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                int i = 0;
                 for (Circle circle : mMapCircles) {
                     circle.remove();
                 }
@@ -357,22 +427,15 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
                 Iterator<DataSnapshot> iterator = dataSnapshot.getChildren().iterator();
                 while (iterator.hasNext()) {
                     Hazard hazard = iterator.next().getValue(Hazard.class);
-                    Circle circle = mMap.addCircle(new CircleOptions()
-                            .center(new LatLng(hazard.getLatitude(), hazard.getLongitude()))
+                    Circle circle = mMap.addCircle(new CircleOptions().center(new LatLng(hazard.getLatitude(), hazard.getLongitude()))
                             .radius(hazard.getHazardRadius())
                             .strokeWidth(10)
-                            .strokeColor(Color.GREEN)
+                            .strokeColor(Color.argb(168, 255, 0, 0))
                             .fillColor(Color.argb(64, 255, 0, 0))
                             .clickable(true));
-
                     mMapCircles.add(circle);
                     circle.setTag(mMapCircles.indexOf(circle));
-                    i++;
-
-                    System.out.println(hazard.getHazardRadius() + "-------------------------------------");
-
                 }
-
             }
 
             @Override
@@ -380,25 +443,24 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
                 System.out.println("Hazard read failed: " + databaseError.getCode());
             }
         });
-
-
     }
 
 
     private void getSafepointsFromDB() {
-
-        final ArrayList<CustomPlace> result = new ArrayList<>();
         final DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference(SAFEPOINTS_DB_KEY);
         mDatabase.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                result.clear();
-                for(DataSnapshot item : dataSnapshot.getChildren()){
-                    CustomPlace customPlace = item.getValue(CustomPlace.class);
-                    customPlace.setUid(item.getKey());
-                    result.add(customPlace);
+                final ArrayList<Safepoint> result = new ArrayList<>();
+                for (DataSnapshot item : dataSnapshot.getChildren()) {
+                    Safepoint safepoint = item.getValue(Safepoint.class);
+                    safepoint.setUid(item.getKey());
+                    result.add(safepoint);
 
                 }
+                int i=0;
+                while(result == null)
+                    i++;
                 onSafepointsFetched(result);
 
             }
@@ -421,6 +483,8 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
                 .enableAutoManage(this, this)
                 .build();
         mGoogleApiClient.connect();
+        placesHelper = new GooglePlacesHelper(this, mGoogleApiClient);
+        getSafepointsFromDB();
 
 
     }
@@ -438,26 +502,18 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
             LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, MainActivity.this);
         }
 
-
-        getSafepointsFromDB();
-
-
-        //get safepoints firebase
-        //convert
-        // show on map
-
+        populateHazardsMap();
 
     }
 
-    public void onSafepointsFetched(ArrayList<CustomPlace> result) {
-        for (Marker marker : mMapMarkers) {
-            marker.remove();
-            Log.e("TAG", "Place removed");
+    public void onSafepointsFetched(ArrayList<Safepoint> result) {
 
-        }
-        GooglePlacesHelper placesHelper = new GooglePlacesHelper(this, mGoogleApiClient);
-        for (CustomPlace safepoint : result) {
-            placesHelper.convertSinglePlace(safepoint);
+//        setUpClusterer();
+        mClusterManager.clearItems();
+        mClusterManager.cluster();
+        for (Safepoint safepoint : result) {
+            if(safepoint != null)
+               placesHelper.convertSinglePlace(safepoint);
             Log.e("TAG", "Place draw");
         }
 
@@ -563,17 +619,14 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
         }
         switch (v.getId()) {
 
-            case R.id.radius_minus_btn:
-                decreaseRadius();
-                break;
-            case R.id.radius_plus_btn:
-                increaseRadius();
-                break;
             case R.id.fab_add_hazard:
                 initializeAddingHazard();
                 break;
             case R.id.save_hazard_btn:
                 saveHazard();
+                break;
+            case R.id.cancel_hazard_btn:
+                finalizeAddingHazard();
                 break;
             case R.id.fab_add_safepoint:
                 Log.e("TAG", "Add safepoint pressed");
@@ -592,7 +645,7 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
                             .build();
                     Intent intent =
                             new PlaceAutocomplete.IntentBuilder(PlaceAutocomplete.MODE_OVERLAY)
-                                    .setBoundsBias(new LatLngBounds(mMap.getCameraPosition().target,mMap.getCameraPosition().target))
+                                    .setBoundsBias(new LatLngBounds(mMap.getCameraPosition().target, mMap.getCameraPosition().target))
 //                                    .setFilter(typeFilter)
                                     .build(this);
                     startActivityForResult(intent, PLACE_AUTOCOMPLETE_REQUEST_CODE);
@@ -609,12 +662,17 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
         final FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference myRef = database.getReference(HAZARDS_DB_KEY).push();
         myRef.setValue(new Hazard(mHazardRadius.getCenter().latitude, mHazardRadius.getCenter().longitude, mRadiusValue));
+
         finalizeAddingHazard();
     }
 
     private void finalizeAddingHazard() {
         mHasAddHazardStarted = false;
-        mHazardRadius.remove();
+        if (mHazardRadius != null) {
+            mHazardRadius.remove();
+            mHazardRadius=null;
+            convertSeekbarProgresToRadius();
+        }
         mRadiusSeekbar.setEnabled(false);
         fabMain.setVisibility(View.VISIBLE);
         findViewById(R.id.add_hazard_layout).setVisibility(View.GONE);
@@ -625,32 +683,6 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
         mHasAddHazardStarted = true;
         fabMain.setVisibility(View.GONE);
         findViewById(R.id.add_hazard_layout).setVisibility(View.VISIBLE);
-
-    }
-
-    private void increaseRadius() {
-        mRadiusValue += 100;
-        mRadiusTextView.setText(mRadiusValue + "");
-        mHazardRadius.setRadius(mRadiusValue);
-        if (mRadiusValue > 100) {
-            View minusBtn = findViewById(R.id.radius_minus_btn);
-            minusBtn.getBackground().setColorFilter(null);
-            minusBtn.setEnabled(true);
-
-        }
-
-    }
-
-    private void decreaseRadius() {
-        mRadiusValue -= 100;
-        mRadiusTextView.setText(mRadiusValue + "");
-        mHazardRadius.setRadius(mRadiusValue);
-        if (mRadiusValue < 200) {
-
-            View minusBtn = findViewById(R.id.radius_minus_btn);
-            minusBtn.getBackground().setColorFilter(Color.BLUE, PorterDuff.Mode.MULTIPLY);
-            minusBtn.setEnabled(false);
-        }
 
     }
 
@@ -673,8 +705,6 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
             }
             mHazardRadius.setCenter(latLng);
             mHazardRadius.setRadius(mRadiusValue);
-            findViewById(R.id.radius_minus_btn).setEnabled(true);
-            findViewById(R.id.radius_plus_btn).setEnabled(true);
         }
 
     }
@@ -684,16 +714,14 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
     }
 
     @Override
-    public void onPlaceFound(Place place,CustomPlace customPlace) {
-        Marker marker = mMap.addMarker(new MarkerOptions()
-                .position(place.getLatLng())
-                .title(customPlace.getCategory())
-                .snippet("snippet test")
-
-        );
-        marker.setTag(customPlace.getUid());
-        mMapMarkers.add(marker);
-
+    public void onPlaceFound(Place place, Safepoint safepoint) {
+        MyClusterItem item = new MyClusterItem(place.getLatLng().latitude, place.getLatLng().longitude);
+        item.setmIconID(getResources().getIdentifier(safepoint.getUtilitiesImages().get(0), "drawable", getPackageName()));
+        item.setmTitle(safepoint.getCategory());
+        item.setmSnippet("Click for details");
+        item.setUid(safepoint.getUid());
+        mClusterManager.addItem(item);
+        mClusterManager.cluster();
     }
 
     @Override
@@ -701,11 +729,12 @@ public class MainActivity extends AppCompatActivity  implements OnMapReadyCallba
 
     }
 
+
     @Override
-    public void onInfoWindowClick(Marker marker) {
-        Log.e("Marker clicked:",marker.getTag().toString());
-        Intent intent = new Intent(this,SafepointDetailsActivity.class);
-        intent.putExtra(SAFEPOINT_UID,marker.getTag().toString());
+    public void onClusterItemInfoWindowClick(MyClusterItem myClusterItem) {
+        Log.e("Marker clicked:", myClusterItem.getUid().toString());
+        Intent intent = new Intent(this, SafepointDetailsActivity.class);
+        intent.putExtra(SAFEPOINT_UID, myClusterItem.getUid().toString());
         startActivity(intent);
     }
 }

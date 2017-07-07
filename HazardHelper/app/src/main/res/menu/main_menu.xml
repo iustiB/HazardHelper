@@ -9,9 +9,9 @@
         app:showAsAction="always"/>
 
     <!-- Settings, should always be in the overflow -->
-    <item android:id="@+id/action_settings"
+    <item android:id="@+id/log_out_btn"
         android:icon="@drawable/ic_add_pin"
-        android:title="title2"
+        android:title="Log out"
         app:showAsAction="never"/>
 
 </menu>

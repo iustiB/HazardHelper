@@ -8,17 +8,16 @@
         android:id="@+id/my_toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
+        android:background="@color/colorPrimaryDark"
         android:elevation="4dp"
-        android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
+        app:popupTheme="@style/AppTheme" />
 
     <fragment xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
-        android:layout_below="@+id/my_toolbar"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_below="@+id/my_toolbar"
         tools:context="licenta.iusti.hazardhelper.MainActivity" />
     <!--tools:layout="@layout/activity_main" -->
 
@@ -43,6 +42,7 @@
         android:gravity="center_vertical"
         android:padding="@dimen/standard_12"
         android:visibility="gone"
+
         app:layout_behavior="com.ajaysinghdewari.floatingactionbuttonmenu.activities.utils.MoveUpwardBehavior">
 
 
@@ -66,42 +66,6 @@
 
     </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/fabLayout2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentEnd="true"
-        android:layout_gravity="bottom|end"
-        android:layout_marginBottom="@dimen/standard_23"
-        android:layout_marginRight="@dimen/standard_8"
-        android:clipToPadding="false"
-        android:gravity="center_vertical"
-        android:padding="@dimen/standard_12"
-        android:visibility="gone"
-        app:layout_behavior="com.ajaysinghdewari.floatingactionbuttonmenu.activities.utils.MoveUpwardBehavior">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/standard_12"
-            android:text="FabTitle2"
-            android:textSize="@dimen/fab_text_size"
-            android:textStyle="bold" />
-
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/fab2"
-            android:layout_width="wrap_content"
-
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="10dp"
-            android:padding="@dimen/fab_margin"
-            app:fabSize="mini"
-            app:srcCompat="@drawable/ic_fab_add" />
-
-
-    </LinearLayout>
-
 
     <LinearLayout
         android:id="@+id/fabLayout3"
@@ -113,9 +77,9 @@
         android:layout_marginBottom="@dimen/standard_23"
         android:layout_marginRight="@dimen/standard_8"
         android:clipToPadding="false"
+        android:visibility="gone"
         android:gravity="center_vertical"
         android:padding="@dimen/standard_12"
-        android:visibility="gone"
         app:layout_behavior="com.ajaysinghdewari.floatingactionbuttonmenu.activities.utils.MoveUpwardBehavior">
 
 
@@ -123,7 +87,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/standard_12"
-            android:text="ADD Safepoint"
+            android:text="Add Safepoint"
             android:textSize="@dimen/fab_text_size"
             android:textStyle="bold" />
 
@@ -133,7 +97,6 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="10dp"
             android:clickable="true"
-            android:tint="@android:color/white"
             app:fabSize="mini"
             app:srcCompat="@drawable/ic_fab_add" />
 
@@ -161,7 +124,6 @@
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|end"
             android:gravity="center_vertical"
-            app:backgroundTint="@color/wallet_highlighted_text_holo_light"
             app:elevation="1dp"
             app:fabSize="normal"
             app:pressedTranslationZ="5dp"
@@ -171,6 +133,7 @@
 
     <!--   Layout for adding a new hazard    -->
     <RelativeLayout
+        android:layout_below="@id/my_toolbar"
         android:id="@+id/add_hazard_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -178,43 +141,13 @@
 
         <SeekBar
             android:id="@+id/seek_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
             android:layout_margin="10dp"
-            android:paddingBottom="50dp"
             android:max="40"
-            android:progress="20"
-            />
-
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true">
-
-
-            <Button
-                android:id="@+id/radius_minus_btn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentLeft="true"
-                android:enabled="false"
-                android:text="-" />
-
-            <TextView
-                android:id="@+id/radius_text_view"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true" />
-
-            <Button
-                android:id="@+id/radius_plus_btn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentRight="true"
-                android:enabled="false"
-                android:text="+" />
-        </RelativeLayout>
+            android:paddingBottom="50dp"
+            android:progress="20" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -226,9 +159,10 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="Save" />
+                android:text="@string/save" />
 
             <Button
+                android:id="@+id/cancel_hazard_btn"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
